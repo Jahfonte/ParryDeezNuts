@@ -128,7 +128,7 @@ local function CreateOptionsFrame()
 
     local f = CreateFrame("Frame", "ParryDeezNutsOptionsFrame", UIParent)
     f:SetWidth(420)
-    f:SetHeight(560)
+    f:SetHeight(460)
     f:SetPoint("CENTER", UIParent, "CENTER", 0, 30)
     f:SetFrameStrata("DIALOG")
     f:SetFrameLevel(100)
@@ -168,6 +168,31 @@ local function CreateOptionsFrame()
     content:SetWidth(370)
     content:SetHeight(1050)
     scrollFrame:SetScrollChild(content)
+
+    -- Enable mouse wheel scrolling
+    scrollFrame:EnableMouseWheel(true)
+    scrollFrame:SetScript("OnMouseWheel", function()
+        local current = scrollFrame:GetVerticalScroll()
+        local maxScroll = content:GetHeight() - scrollFrame:GetHeight()
+        local step = 40
+        if arg1 > 0 then
+            scrollFrame:SetVerticalScroll(math.max(0, current - step))
+        else
+            scrollFrame:SetVerticalScroll(math.min(maxScroll, current + step))
+        end
+    end)
+
+    content:EnableMouseWheel(true)
+    content:SetScript("OnMouseWheel", function()
+        local current = scrollFrame:GetVerticalScroll()
+        local maxScroll = content:GetHeight() - scrollFrame:GetHeight()
+        local step = 40
+        if arg1 > 0 then
+            scrollFrame:SetVerticalScroll(math.max(0, current - step))
+        else
+            scrollFrame:SetVerticalScroll(math.min(maxScroll, current + step))
+        end
+    end)
 
     local yPos = -6
 
