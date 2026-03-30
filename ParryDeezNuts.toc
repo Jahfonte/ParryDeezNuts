@@ -1,0 +1,10 @@
+## Interface: 11200
+## Title: |cffff4444Parry|cffffffffDeez|cffff4444Nuts
+## Author: Totemfoo
+## Version: 1.2.0
+## Notes: Tracks when bosses parry non-tank attacks causing parry haste on the tank. Calls out offenders with optional random R-rated insults via configurable channels.
+## SavedVariables: ParryDeezNutsDB
+## SavedVariablesPerCharacter: ParryDeezNutsCharDB
+
+Core.lua
+Options.lua
