@@ -44,6 +44,10 @@ local INSULT_POOL = {
     "%s YOU IDIOT, WE DO THIS EVERY FUCKIN' WEEK!",
     "%s JUST FUCKING LEAVE YOU PARRY HASTING TWAT!",
     "%s this is why we will never do K40. You are bad and should feel bad.",
+    "%s I swear to god if you parry haste one more time I'm replacing you with a fucking pug",
+    "%s you're the reason I have to pop cooldowns early you useless sack of shit",
+    "%s BEHIND THE BOSS. HOW HARD IS THAT TO UNDERSTAND?!",
+    "%s I've explained this fight six times and you're STILL in front of the boss. Unfuckingreal.",
 }
 
 -- Return a random insult with player name inserted
