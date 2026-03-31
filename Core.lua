@@ -69,6 +69,8 @@ local defaults = {
     excludeSelf = true,
     excludeTargetTarget = true,
     tankExcludeList = {},
+    -- Player ignore list
+    ignoreList = {},
     -- Output channels
     outputLocal = true,
     outputYell = false,
@@ -433,6 +435,16 @@ local function HandleParryEvent()
         return
     end
 
+    -- Ignore list
+    if ParryDeezNutsDB.ignoreList then
+        for _, ignoreName in ipairs(ParryDeezNutsDB.ignoreList) do
+            if S_LOWER(ignoreName) == S_LOWER(attacker) then
+                Debug("Skipped (ignored): " .. tostring(attacker))
+                return
+            end
+        end
+    end
+
     -- Stats (always count, even if throttled)
     parryStats[attacker] = (parryStats[attacker] or 0) + 1
     sessionTotal = sessionTotal + 1
@@ -590,6 +602,9 @@ local function EnsureDB()
     if not ParryDeezNutsDB.tankExcludeList or type(ParryDeezNutsDB.tankExcludeList) ~= "table" then
         ParryDeezNutsDB.tankExcludeList = {}
     end
+    if not ParryDeezNutsDB.ignoreList or type(ParryDeezNutsDB.ignoreList) ~= "table" then
+        ParryDeezNutsDB.ignoreList = {}
+    end
 end
 
 local function OnPlayerLogin()
@@ -679,6 +694,7 @@ local function HandleSlashCommand(msg)
         DEFAULT_CHAT_FRAME:AddMessage("  |cff00ccff/pdn test|r - Fire a test event")
         DEFAULT_CHAT_FRAME:AddMessage("  |cff00ccff/pdn insult|r - Preview a random insult")
         DEFAULT_CHAT_FRAME:AddMessage("  |cff00ccff/pdn tank add|remove|list [name]|r - Tank exclude list")
+        DEFAULT_CHAT_FRAME:AddMessage("  |cff00ccff/pdn ignore add|remove|list [name]|r - Ignore list")
         DEFAULT_CHAT_FRAME:AddMessage("  |cff00ccff/pdn minimap|r - Toggle minimap button")
         DEFAULT_CHAT_FRAME:AddMessage("  |cff00ccff/pdn debug|r - Toggle debug mode")
     elseif cmd == "toggle" then
@@ -775,6 +791,48 @@ local function HandleSlashCommand(msg)
             else
                 Print("|cffffd700Tank Exclude List:|r")
                 for i, name in ipairs(ParryDeezNutsDB.tankExcludeList) do
+                    DEFAULT_CHAT_FRAME:AddMessage("  " .. tostring(i) .. ". " .. tostring(name))
+                end
+            end
+        end
+    elseif S_FIND(cmd, "^ignore ") then
+        local subCmd = S_SUB(cmd, 8)
+        if S_FIND(subCmd, "^add ") then
+            local ignoreName = S_SUB(subCmd, 5)
+            if ignoreName and ignoreName ~= "" then
+                if not ParryDeezNutsDB.ignoreList then ParryDeezNutsDB.ignoreList = {} end
+                local found = false
+                for _, existing in ipairs(ParryDeezNutsDB.ignoreList) do
+                    if S_LOWER(existing) == S_LOWER(ignoreName) then found = true; break end
+                end
+                if not found then
+                    table.insert(ParryDeezNutsDB.ignoreList, ignoreName)
+                    Print("Added |cff00ff00" .. tostring(ignoreName) .. "|r to ignore list.")
+                else
+                    Print(tostring(ignoreName) .. " already ignored.")
+                end
+            end
+        elseif S_FIND(subCmd, "^remove ") then
+            local ignoreName = S_SUB(subCmd, 8)
+            if ignoreName and ignoreName ~= "" then
+                local newList = {}
+                local removed = false
+                for _, existing in ipairs(ParryDeezNutsDB.ignoreList or {}) do
+                    if S_LOWER(existing) == S_LOWER(ignoreName) then
+                        removed = true
+                    else
+                        table.insert(newList, existing)
+                    end
+                end
+                ParryDeezNutsDB.ignoreList = newList
+                Print(removed and ("Removed " .. tostring(ignoreName)) or (tostring(ignoreName) .. " not found"))
+            end
+        elseif subCmd == "list" then
+            if getn(ParryDeezNutsDB.ignoreList or {}) == 0 then
+                Print("Ignore list empty.")
+            else
+                Print("|cffffd700Ignore List:|r")
+                for i, name in ipairs(ParryDeezNutsDB.ignoreList) do
                     DEFAULT_CHAT_FRAME:AddMessage("  " .. tostring(i) .. ". " .. tostring(name))
                 end
             end

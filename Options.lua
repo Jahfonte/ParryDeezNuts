@@ -169,7 +169,7 @@ local function CreateOptionsFrame()
 
     local content = CreateFrame("Frame", "PDN_OptContent", scrollFrame)
     content:SetWidth(370)
-    content:SetHeight(1050)
+    content:SetHeight(1200)
     scrollFrame:SetScrollChild(content)
 
     -- Enable mouse wheel scrolling
@@ -341,6 +341,91 @@ local function CreateOptionsFrame()
             ParryDeezNutsDB.tankExcludeList = newList
             tankInput.editbox:SetText("")
             RefreshTankList()
+        end
+    end)
+
+    yPos = yPos - 32
+
+    -- ============ IGNORE LIST ============
+    CreateSectionHeader(content, "Ignore List (players exempt from warnings)", yPos)
+    yPos = yPos - 18
+
+    local ignoreNote = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    ignoreNote:SetPoint("TOPLEFT", content, "TOPLEFT", 14, yPos)
+    ignoreNote:SetWidth(340)
+    ignoreNote:SetTextColor(0.6, 0.6, 0.6, 1)
+    ignoreNote:SetText("Players on this list will never be called out, even if they parry haste.")
+    yPos = yPos - 20
+
+    local ignoreListFrame = CreateFrame("Frame", "PDN_IgnoreList", content)
+    ignoreListFrame:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yPos)
+    ignoreListFrame:SetWidth(340)
+    ignoreListFrame:SetHeight(40)
+    ignoreListFrame:SetBackdrop(sectionBackdrop)
+    ignoreListFrame:SetBackdropColor(0.03, 0.03, 0.06, 0.85)
+    ignoreListFrame:SetBackdropBorderColor(0.3, 0.3, 0.4, 0.7)
+
+    local ignoreListText = ignoreListFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    ignoreListText:SetPoint("TOPLEFT", ignoreListFrame, "TOPLEFT", 6, -4)
+    ignoreListText:SetWidth(326)
+    ignoreListText:SetJustifyH("LEFT")
+    ignoreListText:SetTextColor(0.7, 0.7, 0.7, 1)
+    yPos = yPos - 46
+
+    local ignoreInput = CreateEB("IgnoreName", content, 180)
+    ignoreInput:SetPoint("TOPLEFT", content, "TOPLEFT", 12, yPos)
+
+    local addIgnoreBtn = CreateFrame("Button", "PDN_AddIgnore", content, "UIPanelButtonTemplate")
+    addIgnoreBtn:SetWidth(55)
+    addIgnoreBtn:SetHeight(22)
+    addIgnoreBtn:SetPoint("LEFT", ignoreInput, "RIGHT", 8, -2)
+    addIgnoreBtn:SetText("Add")
+
+    local rmIgnoreBtn = CreateFrame("Button", "PDN_RmIgnore", content, "UIPanelButtonTemplate")
+    rmIgnoreBtn:SetWidth(55)
+    rmIgnoreBtn:SetHeight(22)
+    rmIgnoreBtn:SetPoint("LEFT", addIgnoreBtn, "RIGHT", 4, 0)
+    rmIgnoreBtn:SetText("Remove")
+
+    local function RefreshIgnoreList()
+        if not ParryDeezNutsDB.ignoreList or getn(ParryDeezNutsDB.ignoreList) == 0 then
+            ignoreListText:SetText("|cff666666(empty)|r")
+        else
+            local names = ""
+            for i, name in ipairs(ParryDeezNutsDB.ignoreList) do
+                if i > 1 then names = names .. ", " end
+                names = names .. "|cffff8800" .. tostring(name) .. "|r"
+            end
+            ignoreListText:SetText(names)
+        end
+    end
+
+    addIgnoreBtn:SetScript("OnClick", function()
+        local name = ignoreInput.editbox:GetText()
+        if name and name ~= "" then
+            if not ParryDeezNutsDB.ignoreList then ParryDeezNutsDB.ignoreList = {} end
+            local found = false
+            for _, e in ipairs(ParryDeezNutsDB.ignoreList) do
+                if S_LOWER(e) == S_LOWER(name) then found = true; break end
+            end
+            if not found then table.insert(ParryDeezNutsDB.ignoreList, name) end
+            ignoreInput.editbox:SetText("")
+            RefreshIgnoreList()
+            DEFAULT_CHAT_FRAME:AddMessage(ADDON_COLOR .. "[ParryDeezNuts]|r Added " .. tostring(name) .. " to ignore list.", 0.5, 1, 0.5)
+        end
+    end)
+
+    rmIgnoreBtn:SetScript("OnClick", function()
+        local name = ignoreInput.editbox:GetText()
+        if name and name ~= "" then
+            local newList = {}
+            for _, e in ipairs(ParryDeezNutsDB.ignoreList or {}) do
+                if S_LOWER(e) ~= S_LOWER(name) then table.insert(newList, e) end
+            end
+            ParryDeezNutsDB.ignoreList = newList
+            ignoreInput.editbox:SetText("")
+            RefreshIgnoreList()
+            DEFAULT_CHAT_FRAME:AddMessage(ADDON_COLOR .. "[ParryDeezNuts]|r Removed " .. tostring(name) .. " from ignore list.", 0.5, 1, 0.5)
         end
     end)
 
@@ -638,6 +723,7 @@ local function CreateOptionsFrame()
         thrSlider:SetValue(db.throttleSeconds or 3)
         _G["PDN_ThrottleSliderText"]:SetText(tostring(db.throttleSeconds or 3) .. "s")
         RefreshTankList()
+        RefreshIgnoreList()
         RefreshStats()
     end
 
