@@ -492,6 +492,83 @@ local function UnregisterCombatEvents()
 end
 
 ----------------------------------------------
+-- Minimap Button
+----------------------------------------------
+
+local function CreateMinimapButton()
+    local button = CreateFrame("Button", "ParryDeezNutsMinimapButton", Minimap)
+    button:SetWidth(31)
+    button:SetHeight(31)
+    button:SetFrameStrata("MEDIUM")
+    button:SetFrameLevel(8)
+    button:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
+
+    local overlay = button:CreateTexture(nil, "OVERLAY")
+    overlay:SetWidth(53)
+    overlay:SetHeight(53)
+    overlay:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
+    overlay:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
+
+    local icon = button:CreateTexture(nil, "BACKGROUND")
+    icon:SetWidth(20)
+    icon:SetHeight(20)
+    icon:SetTexture("Interface\\Icons\\Ability_Parry")
+    icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    icon:SetPoint("CENTER", button, "CENTER", 0, 0)
+    button.icon = icon
+
+    local function UpdatePosition()
+        local angle = ParryDeezNutsDB.minimapAngle or 195
+        local rad = math.rad(angle)
+        button:ClearAllPoints()
+        button:SetPoint("CENTER", Minimap, "CENTER", 52 * math.cos(rad), 52 * math.sin(rad))
+    end
+    UpdatePosition()
+
+    button:RegisterForDrag("LeftButton")
+    button:SetScript("OnDragStart", function() this.dragging = true end)
+    button:SetScript("OnDragStop", function() this.dragging = false end)
+    button:SetScript("OnUpdate", function()
+        if this.dragging then
+            local mx, my = Minimap:GetCenter()
+            local cx, cy = GetCursorPosition()
+            local scale = UIParent:GetEffectiveScale()
+            cx, cy = cx / scale, cy / scale
+            local a = math.deg(math.atan2(cy - my, cx - mx))
+            ParryDeezNutsDB.minimapAngle = a
+            local rad = math.rad(a)
+            this:ClearAllPoints()
+            this:SetPoint("CENTER", Minimap, "CENTER", 52 * math.cos(rad), 52 * math.sin(rad))
+        end
+    end)
+
+    button:SetScript("OnClick", function()
+        if ParryDeezNuts.ToggleOptions then ParryDeezNuts.ToggleOptions() end
+    end)
+
+    button:SetScript("OnEnter", function()
+        GameTooltip:SetOwner(this, "ANCHOR_LEFT")
+        GameTooltip:AddLine("|cffff4444Parry|cffffffffDeez|cffff4444Nuts|r", 1, 1, 1)
+        GameTooltip:AddLine("Parry Haste Tracker v" .. ADDON_VERSION, 0.7, 0.7, 0.7)
+        GameTooltip:AddLine(" ")
+        if ParryDeezNutsDB.enabled then
+            GameTooltip:AddLine("|cff00ff00Enabled|r - Tracking non-tank parry haste", 0.7, 0.7, 0.7)
+        else
+            GameTooltip:AddLine("|cffff0000Disabled|r", 0.7, 0.7, 0.7)
+        end
+        GameTooltip:AddLine(" ")
+        GameTooltip:AddLine("Left-click: Open settings", 0.5, 0.8, 1)
+        GameTooltip:AddLine("Drag: Move button", 0.5, 0.5, 0.5)
+        GameTooltip:Show()
+    end)
+    button:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+    if not ParryDeezNutsDB.showMinimap then button:Hide() end
+    ParryDeezNuts.minimapButton = button
+    return button
+end
+
+----------------------------------------------
 -- Initialization
 ----------------------------------------------
 
@@ -581,83 +658,6 @@ eventFrame:SetScript("OnEvent", function()
         HandleParryEvent()
     end
 end)
-
-----------------------------------------------
--- Minimap Button
-----------------------------------------------
-
-local function CreateMinimapButton()
-    local button = CreateFrame("Button", "ParryDeezNutsMinimapButton", Minimap)
-    button:SetWidth(31)
-    button:SetHeight(31)
-    button:SetFrameStrata("MEDIUM")
-    button:SetFrameLevel(8)
-    button:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
-
-    local overlay = button:CreateTexture(nil, "OVERLAY")
-    overlay:SetWidth(53)
-    overlay:SetHeight(53)
-    overlay:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
-    overlay:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
-
-    local icon = button:CreateTexture(nil, "BACKGROUND")
-    icon:SetWidth(20)
-    icon:SetHeight(20)
-    icon:SetTexture("Interface\\Icons\\Ability_Parry")
-    icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-    icon:SetPoint("CENTER", button, "CENTER", 0, 0)
-    button.icon = icon
-
-    local function UpdatePosition()
-        local angle = ParryDeezNutsDB.minimapAngle or 195
-        local rad = math.rad(angle)
-        button:ClearAllPoints()
-        button:SetPoint("CENTER", Minimap, "CENTER", 52 * math.cos(rad), 52 * math.sin(rad))
-    end
-    UpdatePosition()
-
-    button:RegisterForDrag("LeftButton")
-    button:SetScript("OnDragStart", function() this.dragging = true end)
-    button:SetScript("OnDragStop", function() this.dragging = false end)
-    button:SetScript("OnUpdate", function()
-        if this.dragging then
-            local mx, my = Minimap:GetCenter()
-            local cx, cy = GetCursorPosition()
-            local scale = UIParent:GetEffectiveScale()
-            cx, cy = cx / scale, cy / scale
-            local a = math.deg(math.atan2(cy - my, cx - mx))
-            ParryDeezNutsDB.minimapAngle = a
-            local rad = math.rad(a)
-            this:ClearAllPoints()
-            this:SetPoint("CENTER", Minimap, "CENTER", 52 * math.cos(rad), 52 * math.sin(rad))
-        end
-    end)
-
-    button:SetScript("OnClick", function()
-        if ParryDeezNuts.ToggleOptions then ParryDeezNuts.ToggleOptions() end
-    end)
-
-    button:SetScript("OnEnter", function()
-        GameTooltip:SetOwner(this, "ANCHOR_LEFT")
-        GameTooltip:AddLine("|cffff4444Parry|cffffffffDeez|cffff4444Nuts|r", 1, 1, 1)
-        GameTooltip:AddLine("Parry Haste Tracker v" .. ADDON_VERSION, 0.7, 0.7, 0.7)
-        GameTooltip:AddLine(" ")
-        if ParryDeezNutsDB.enabled then
-            GameTooltip:AddLine("|cff00ff00Enabled|r - Tracking non-tank parry haste", 0.7, 0.7, 0.7)
-        else
-            GameTooltip:AddLine("|cffff0000Disabled|r", 0.7, 0.7, 0.7)
-        end
-        GameTooltip:AddLine(" ")
-        GameTooltip:AddLine("Left-click: Open settings", 0.5, 0.8, 1)
-        GameTooltip:AddLine("Drag: Move button", 0.5, 0.5, 0.5)
-        GameTooltip:Show()
-    end)
-    button:SetScript("OnLeave", function() GameTooltip:Hide() end)
-
-    if not ParryDeezNutsDB.showMinimap then button:Hide() end
-    ParryDeezNuts.minimapButton = button
-    return button
-end
 
 ----------------------------------------------
 -- Slash Commands
@@ -791,8 +791,6 @@ SLASH_PARRYDEEZ1 = "/pdn"
 SLASH_PARRYDEEZ2 = "/parrydeez"
 SLASH_PARRYDEEZ3 = "/parrydeznuts"
 SlashCmdList["PARRYDEEZ"] = HandleSlashCommand
-
--- Minimap button created in OnPlayerLogin after EnsureDB
 
 ----------------------------------------------
 -- Public API
