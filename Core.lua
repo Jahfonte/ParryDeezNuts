@@ -491,6 +491,7 @@ local function OnPlayerLogin()
     throttleTable = {}
     if ParryDeezNutsDB.enabled then RegisterCombatEvents() end
     initialized = true
+    CreateMinimapButton()
     if ParryDeezNutsDB.enabled then
         Print("|cff00ff00v" .. ADDON_VERSION .. " loaded!|r Type |cff00ccff/pdn|r for options.")
     end
@@ -632,6 +633,10 @@ end
 ----------------------------------------------
 
 local function HandleSlashCommand(msg)
+    if not ParryDeezNutsDB then
+        DEFAULT_CHAT_FRAME:AddMessage(ADDON_COLOR .. "ParryDeezNuts|r: Not loaded yet. Wait for login to complete.")
+        return
+    end
     local cmd = S_LOWER(msg or "")
 
     if cmd == "" or cmd == "help" then
@@ -709,7 +714,7 @@ local function HandleSlashCommand(msg)
             if tankName and tankName ~= "" then
                 local found = false
                 for _, existing in ipairs(ParryDeezNutsDB.tankExcludeList) do
-                    if S_LOWER(existing) == S_LOWER(tankName) then found = true break end
+                    if S_LOWER(existing) == S_LOWER(tankName) then found = true; break end
                 end
                 if not found then
                     table.insert(ParryDeezNutsDB.tankExcludeList, tankName)
@@ -756,19 +761,13 @@ SLASH_PARRYDEEZ2 = "/parrydeez"
 SLASH_PARRYDEEZ3 = "/parrydeznuts"
 SlashCmdList["PARRYDEEZ"] = HandleSlashCommand
 
-----------------------------------------------
--- Deferred Init
-----------------------------------------------
-
-local initFrame = CreateFrame("Frame")
-initFrame:RegisterEvent("PLAYER_LOGIN")
-initFrame:SetScript("OnEvent", function() CreateMinimapButton() end)
+-- Minimap button created in OnPlayerLogin after EnsureDB
 
 ----------------------------------------------
 -- Public API
 ----------------------------------------------
 
-function ParryDeezNuts.IsEnabled() return ParryDeezNutsDB.enabled end
+function ParryDeezNuts.IsEnabled() return ParryDeezNutsDB and ParryDeezNutsDB.enabled end
 function ParryDeezNuts.GetVersion() return ADDON_VERSION end
 function ParryDeezNuts.GetSessionStats() return parryStats, sessionTotal end
 function ParryDeezNuts.Enable() ParryDeezNutsDB.enabled = true RegisterCombatEvents() end

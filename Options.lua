@@ -323,7 +323,7 @@ local function CreateOptionsFrame()
             if not ParryDeezNutsDB.tankExcludeList then ParryDeezNutsDB.tankExcludeList = {} end
             local found = false
             for _, e in ipairs(ParryDeezNutsDB.tankExcludeList) do
-                if S_LOWER(e) == S_LOWER(name) then found = true break end
+                if S_LOWER(e) == S_LOWER(name) then found = true; break end
             end
             if not found then table.insert(ParryDeezNutsDB.tankExcludeList, name) end
             tankInput.editbox:SetText("")
