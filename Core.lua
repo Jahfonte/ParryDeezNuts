@@ -183,16 +183,35 @@ local function IsCurrentTank(name)
     return false
 end
 
-local function IsTargetBoss()
-    if UnitExists("target") then
+local function IsMobBoss(mobName)
+    -- Check player's target first
+    if UnitExists("target") and UnitName("target") == mobName then
         local level = UnitLevel("target")
         if level == -1 then return true end
-        local class = UnitClassification("target")
-        if class == "worldboss" or class == "raidboss" then
+        local classification = UnitClassification("target")
+        if classification == "worldboss" or classification == "raidboss" then
             return true
         end
+        return false
     end
-    return false
+    -- Scan raid targets to find the mob by name
+    local numRaid = GetNumRaidMembers()
+    if numRaid > 0 then
+        for i = 1, numRaid do
+            local unit = "raid" .. tostring(i) .. "target"
+            if UnitExists(unit) and UnitName(unit) == mobName then
+                local level = UnitLevel(unit)
+                if level == -1 then return true end
+                local classification = UnitClassification(unit)
+                if classification == "worldboss" or classification == "raidboss" then
+                    return true
+                end
+                return false
+            end
+        end
+    end
+    -- Can't find the mob, default to allowing it
+    return true
 end
 
 local function IsRaidMember(name)
@@ -391,7 +410,7 @@ local function HandleParryEvent()
     -- Filters
     if ParryDeezNutsDB.onlyInRaid and not IsInGroup() then return end
     if ParryDeezNutsDB.onlyInCombat and not UnitAffectingCombat("player") then return end
-    if ParryDeezNutsDB.onlyBosses and not IsTargetBoss() then return end
+    if ParryDeezNutsDB.onlyBosses and not IsMobBoss(parriedBy) then return end
     if attacker ~= UnitName("player") and not IsRaidMember(attacker) then return end
 
     -- CRITICAL: Exclude tanks
@@ -400,17 +419,7 @@ local function HandleParryEvent()
         return
     end
 
-    -- Throttle
-    local now = GetTime()
-    local throttle = ParryDeezNutsDB.throttleSeconds or 3
-    if throttleTable[attacker] and (now - throttleTable[attacker]) < throttle then
-        parryStats[attacker] = (parryStats[attacker] or 0) + 1
-        sessionTotal = sessionTotal + 1
-        return
-    end
-    throttleTable[attacker] = now
-
-    -- Stats
+    -- Stats (always count, even if throttled)
     parryStats[attacker] = (parryStats[attacker] or 0) + 1
     sessionTotal = sessionTotal + 1
 
@@ -418,6 +427,14 @@ local function HandleParryEvent()
         if not ParryDeezNutsDB.stats then ParryDeezNutsDB.stats = {} end
         ParryDeezNutsDB.stats[attacker] = (ParryDeezNutsDB.stats[attacker] or 0) + 1
     end
+
+    -- Throttle (only limits announcements, not counting)
+    local now = GetTime()
+    local throttle = ParryDeezNutsDB.throttleSeconds or 3
+    if throttleTable[attacker] and (now - throttleTable[attacker]) < throttle then
+        return
+    end
+    throttleTable[attacker] = now
 
     -- Announce
     AnnounceParryHaste(attacker)
