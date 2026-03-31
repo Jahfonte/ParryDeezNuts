@@ -62,7 +62,7 @@ local defaults = {
     enabled = true,
     onlyInRaid = true,
     onlyInCombat = true,
-    onlyBosses = false,
+    onlyBosses = true,
     throttleSeconds = 3,
     message = "%p parry hasted me! Fuck that guy!",
     -- Tank exclusion
