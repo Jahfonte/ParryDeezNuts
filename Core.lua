@@ -9,9 +9,7 @@
 -- Addon namespace
 ParryDeezNuts = ParryDeezNuts or {}
 
--- Saved variables (must be global)
-ParryDeezNutsDB = ParryDeezNutsDB or {}
-ParryDeezNutsCharDB = ParryDeezNutsCharDB or {}
+-- Saved variables - do NOT init here, let WoW load them first
 
 -- Local references for performance
 local _G = _G or getfenv(0)
@@ -440,7 +438,6 @@ local combatEvents = {
     "CHAT_MSG_SPELL_FRIENDLYPLAYER_DAMAGE",
 }
 
-eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:RegisterEvent("PLAYER_LOGIN")
 eventFrame:RegisterEvent("PLAYER_LOGOUT")
 eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
@@ -467,26 +464,33 @@ end
 -- Initialization
 ----------------------------------------------
 
-local function InitializeDefaults()
+local function EnsureDB()
+    if not ParryDeezNutsDB or type(ParryDeezNutsDB) ~= "table" then
+        ParryDeezNutsDB = {}
+    end
+    if not ParryDeezNutsCharDB or type(ParryDeezNutsCharDB) ~= "table" then
+        ParryDeezNutsCharDB = {}
+    end
     for key, value in pairs(defaults) do
         if ParryDeezNutsDB[key] == nil then
             ParryDeezNutsDB[key] = value
         end
     end
-    if not ParryDeezNutsDB.stats then ParryDeezNutsDB.stats = {} end
-    if not ParryDeezNutsDB.tankExcludeList then ParryDeezNutsDB.tankExcludeList = {} end
-end
-
-local function OnAddonLoaded()
-    InitializeDefaults()
-    if ParryDeezNutsDB.enabled then RegisterCombatEvents() end
-    initialized = true
+    if not ParryDeezNutsDB.stats or type(ParryDeezNutsDB.stats) ~= "table" then
+        ParryDeezNutsDB.stats = {}
+    end
+    if not ParryDeezNutsDB.tankExcludeList or type(ParryDeezNutsDB.tankExcludeList) ~= "table" then
+        ParryDeezNutsDB.tankExcludeList = {}
+    end
 end
 
 local function OnPlayerLogin()
+    EnsureDB()
     parryStats = {}
     sessionTotal = 0
     throttleTable = {}
+    if ParryDeezNutsDB.enabled then RegisterCombatEvents() end
+    initialized = true
     if ParryDeezNutsDB.enabled then
         Print("|cff00ff00v" .. ADDON_VERSION .. " loaded!|r Type |cff00ccff/pdn|r for options.")
     end
@@ -535,9 +539,7 @@ end
 ----------------------------------------------
 
 eventFrame:SetScript("OnEvent", function()
-    if event == "ADDON_LOADED" and arg1 == ADDON_NAME then
-        OnAddonLoaded()
-    elseif event == "PLAYER_LOGIN" then
+    if event == "PLAYER_LOGIN" then
         OnPlayerLogin()
     elseif event == "PLAYER_LOGOUT" then
         -- noop

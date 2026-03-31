@@ -419,13 +419,45 @@ local function CreateOptionsFrame()
     saveBtn:SetWidth(80)
     saveBtn:SetHeight(22)
     saveBtn:SetPoint("LEFT", previewBtn, "RIGHT", 6, 0)
-    saveBtn:SetText("Save")
+    saveBtn:SetText("Save All")
     saveBtn:SetScript("OnClick", function()
+        local db = ParryDeezNutsDB
+        -- General
+        db.enabled = cbEnabled:GetChecked() and true or false
+        db.onlyInRaid = cbRaidOnly:GetChecked() and true or false
+        db.onlyInCombat = cbCombatOnly:GetChecked() and true or false
+        db.onlyBosses = cbBossOnly:GetChecked() and true or false
+        db.showOnScreen = cbOnScreen:GetChecked() and true or false
+        db.trackStats = cbStats:GetChecked() and true or false
+        -- Tank exclusion
+        db.excludeSelf = cbExSelf:GetChecked() and true or false
+        db.excludeTargetTarget = cbExTT:GetChecked() and true or false
+        -- Channels
+        db.outputLocal = cbLocal:GetChecked() and true or false
+        db.outputYell = cbYell:GetChecked() and true or false
+        db.outputRaid = cbRaid:GetChecked() and true or false
+        db.outputRaidWarning = cbRW:GetChecked() and true or false
+        db.outputWhisper = cbWhisper:GetChecked() and true or false
+        -- Insults
+        db.insultLocal = cbInsLocal:GetChecked() and true or false
+        db.insultYell = cbInsYell:GetChecked() and true or false
+        db.insultRaid = cbInsRaid:GetChecked() and true or false
+        db.insultRaidWarning = cbInsRW:GetChecked() and true or false
+        db.insultWhisper = cbInsWhisper:GetChecked() and true or false
+        -- Minimap
+        db.showMinimap = cbMinimap:GetChecked() and true or false
+        -- Message
         local msg = msgBox.editbox:GetText()
-        if msg and msg ~= "" then
-            ParryDeezNutsDB.message = msg
-            DEFAULT_CHAT_FRAME:AddMessage(ADDON_COLOR .. "[ParryDeezNuts]|r Message saved!")
+        if msg and msg ~= "" then db.message = msg end
+        -- Throttle
+        db.throttleSeconds = floor(thrSlider:GetValue() + 0.5)
+        -- Apply enable/disable
+        if db.enabled then ParryDeezNuts.Enable() else ParryDeezNuts.Disable() end
+        if ParryDeezNuts.minimapButton then
+            if db.showMinimap then ParryDeezNuts.minimapButton:Show()
+            else ParryDeezNuts.minimapButton:Hide() end
         end
+        DEFAULT_CHAT_FRAME:AddMessage(ADDON_COLOR .. "[ParryDeezNuts]|r Settings saved!", 0.5, 1, 0.5)
     end)
 
     local defBtn = CreateFrame("Button", "PDN_Default", content, "UIPanelButtonTemplate")
