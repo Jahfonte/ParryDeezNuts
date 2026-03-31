@@ -197,6 +197,9 @@ local function CreateOptionsFrame()
         end
     end)
 
+    -- Forward declarations for save function
+    local cbMinimap, thrSlider
+
     local yPos = -6
 
     -- ============ GENERAL ============
@@ -493,13 +496,13 @@ local function CreateOptionsFrame()
     thrLabel:SetText("Seconds between announcements per player:")
     yPos = yPos - 4
 
-    local thrSlider = CreateFrame("Slider", "PDN_ThrottleSlider", content, "OptionsSliderTemplate")
+    thrSlider = CreateFrame("Slider", "PDN_ThrottleSlider", content, "OptionsSliderTemplate")
     thrSlider:SetWidth(200)
     thrSlider:SetHeight(17)
     thrSlider:SetPoint("TOPLEFT", content, "TOPLEFT", 14, yPos - 14)
     thrSlider:SetMinMaxValues(0, 15)
     thrSlider:SetValueStep(1)
-    thrSlider:SetObeyStepOnDrag(true)
+    -- SetObeyStepOnDrag not available in 1.12.1
     _G["PDN_ThrottleSliderLow"]:SetText("0s")
     _G["PDN_ThrottleSliderHigh"]:SetText("15s")
     thrSlider:SetScript("OnValueChanged", function()
@@ -513,7 +516,7 @@ local function CreateOptionsFrame()
     CreateSectionHeader(content, "Minimap", yPos)
     yPos = yPos - 22
 
-    local cbMinimap = CreateCB("Minimap", content, "Show minimap button",
+    cbMinimap = CreateCB("Minimap", content, "Show minimap button",
         "Toggle minimap button visibility.",
         function(checked)
             ParryDeezNutsDB.showMinimap = checked
