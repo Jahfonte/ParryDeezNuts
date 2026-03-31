@@ -69,7 +69,10 @@ local function CreateCB(name, parent, text, tooltip, onClick)
         cb:SetScript("OnLeave", function() GameTooltip:Hide() end)
     end
     cb:SetScript("OnClick", function()
-        if onClick then onClick(this:GetChecked()) end
+        if onClick then
+            local checked = this:GetChecked()
+            if checked then onClick(true) else onClick(false) end
+        end
     end)
     return cb
 end
