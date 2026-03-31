@@ -183,35 +183,49 @@ local function IsCurrentTank(name)
     return false
 end
 
-local function IsMobBoss(mobName)
-    -- Check player's target first
-    if UnitExists("target") and UnitName("target") == mobName then
-        local level = UnitLevel("target")
-        if level == -1 then return true end
-        local classification = UnitClassification("target")
-        if classification == "worldboss" or classification == "raidboss" then
-            return true
-        end
-        return false
+local function IsBossUnit(unit)
+    if not UnitExists(unit) then return false end
+    local level = UnitLevel(unit)
+    if level == -1 then return true end
+    local classification = UnitClassification(unit)
+    if classification == "worldboss" or classification == "raidboss" then
+        return true
     end
-    -- Scan raid targets to find the mob by name
+    return false
+end
+
+local function IsMobBoss(mobName)
+    if not mobName or mobName == "Unknown" then return false end
+
+    -- Check player's target
+    if UnitExists("target") and UnitName("target") == mobName then
+        return IsBossUnit("target")
+    end
+
+    -- Scan raid member targets
     local numRaid = GetNumRaidMembers()
     if numRaid > 0 then
         for i = 1, numRaid do
             local unit = "raid" .. tostring(i) .. "target"
             if UnitExists(unit) and UnitName(unit) == mobName then
-                local level = UnitLevel(unit)
-                if level == -1 then return true end
-                local classification = UnitClassification(unit)
-                if classification == "worldboss" or classification == "raidboss" then
-                    return true
-                end
-                return false
+                return IsBossUnit(unit)
             end
         end
     end
-    -- Can't find the mob, default to allowing it
-    return true
+
+    -- Scan party member targets
+    local numParty = GetNumPartyMembers()
+    if numParty > 0 then
+        for i = 1, numParty do
+            local unit = "party" .. tostring(i) .. "target"
+            if UnitExists(unit) and UnitName(unit) == mobName then
+                return IsBossUnit(unit)
+            end
+        end
+    end
+
+    -- Can't find the mob - not confirmed as boss, don't report
+    return false
 end
 
 local function IsRaidMember(name)
